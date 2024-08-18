@@ -30,6 +30,8 @@ func getConnection() {
 		os.Getenv("MYSQL_PORT"),
 		os.Getenv("MYSQL_DATABASE"))
 
+	// dsn := "uptnnvsx8snn1krr:LoOofEbpnMuNre8xERnq@tcp(b1c6cznmpczvwnocjclv-mysql.services.clever-cloud.com:3306)/b1c6cznmpczvwnocjclv?parseTime=true"
+
 	// Init MySQL database
 	db, err = sql.Open("mysql", dsn)
 	if err != nil {

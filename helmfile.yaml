@@ -1,4 +1,6 @@
 releases:
-- name: gofiber-release
-  namespace: default
-  chart: ./gofiber-helm
+  - name: todo-app
+    chart: ./todo-app-helm
+    version: "1.0.0"
+    values:
+      - values.yaml
