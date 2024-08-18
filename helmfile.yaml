@@ -1,0 +1,4 @@
+releases:
+- name: gofiber-release
+  namespace: default
+  chart: ./gofiber-helm

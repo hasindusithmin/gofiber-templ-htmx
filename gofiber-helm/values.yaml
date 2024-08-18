@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  repository: hasindubandara/app_v1
+  pullPolicy: IfNotPresent
+  
+service:
+  type: NodePort
+  port: 3000
+  targetport: 3000
+  name: gofiber-svc
+
+conatiner:
+  name: gofiber-cont
+
+label:
+  name: gofiber-app
+  
