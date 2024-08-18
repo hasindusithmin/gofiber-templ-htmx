@@ -3,4 +3,4 @@ releases:
     chart: ./todo-app-helm
     version: "1.0.0"
     values:
-      - values.yaml
+      - ./todo-app-helm/values.yaml
