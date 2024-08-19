@@ -1,5 +1,6 @@
 releases:
   - name: todo-app
+    namespace: default
     chart: ./todo-app-helm
     version: "1.0.0"
     values:
