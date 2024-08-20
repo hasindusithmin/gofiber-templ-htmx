@@ -47,6 +47,10 @@ func Setup(app *fiber.App) {
 	todoApp.Delete("/delete/:id", HandleDeleteTodo)
 	todoApp.Post("/logout", HandleLogout)
 
+	app.Get("/healthz", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusOK)
+	})
+
 	/* ↓ Not Found Management - Fallback Page ↓ */
 	app.Get("/*", flagsMiddleware, func(c *fiber.Ctx) error {
 

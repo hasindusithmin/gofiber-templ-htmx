@@ -1,13 +1,13 @@
 replicaCount: 1
 
 image:
-  repository: hasindubandara/todo-app
-  tag: v1
+  repository: us-central1-docker.pkg.dev/ej-migration/todo-registry/todo-app
+  tag: v3
   pullPolicy: IfNotPresent
 
 service:
-  type: NodePort
-  port: 8080
+  type: LoadBalancer
+  port: 80
   targetPort: 3000
 
 env:
