@@ -43,7 +43,6 @@ spec:
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
           args:
-            - "--auto-iam-authn"
             - "--port=3306"
             - "ej-migration:us-central1:cloudmysql"
           securityContext:
