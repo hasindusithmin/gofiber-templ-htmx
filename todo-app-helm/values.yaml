@@ -11,7 +11,7 @@ service:
   targetPort: 3000
 
 serviceaccount:
-  name: todo-app-ksa
+  name: gkesqlsa
   gsa: todo-k8s-csql@ej-migration.iam.gserviceaccount.com 
 
 resources: {}

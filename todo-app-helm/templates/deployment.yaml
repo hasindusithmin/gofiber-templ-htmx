@@ -28,21 +28,22 @@ spec:
             - name: MYSQL_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mysql-secret
+                  name: sql-credentials
                   key: username
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mysql-secret
+                  name: sql-credentials
                   key: password
             - name: MYSQL_DATABASE
               valueFrom:
                 secretKeyRef:
-                  name: mysql-secret
+                  name: sql-credentials
                   key: database          
         - name: cloud-sql-proxy
-          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
           args:
+            - "--structured-logs"
             - "--port=3306"
             - "ej-migration:us-central1:cloudmysql"
           securityContext:
