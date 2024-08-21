@@ -5,8 +5,6 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: "todo"
-    networking.gke.io/managed-certificates: managed-cert
-    networking.gke.io/v1beta1.FrontendConfig: "http-to-https"
 spec:
   defaultBackend:
     service:
