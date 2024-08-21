@@ -10,11 +10,7 @@ service:
   port: 80
   targetPort: 3000
 
-env:
-  MYSQL_HOST: b1c6cznmpczvwnocjclv-mysql.services.clever-cloud.com
-  MYSQL_USERNAME: uptnnvsx8snn1krr
-  MYSQL_PASSWORD: LoOofEbpnMuNre8xERnq
-  MYSQL_PORT: 3306
-  MYSQL_DATABASE: b1c6cznmpczvwnocjclv
+serviceaccount:
+  name: todo-app-ksa
 
 resources: {}
