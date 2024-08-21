@@ -28,32 +28,27 @@ spec:
             - name: MYSQL_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: cloudmysql-secret
+                  name: mysql-secret
                   key: username
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cloudmysql-secret
+                  name: mysql-secret
                   key: password
             - name: MYSQL_DATABASE
               valueFrom:
                 secretKeyRef:
-                  name: cloudmysql-secret
+                  name: mysql-secret
                   key: database          
         - name: cloud-sql-proxy
-          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.3.0
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
           args:
-            - --structured-logs
-            - --port=3306
-            - ej-migration:us-central1:cloudmysql
+            - "--auto-iam-authn"
+            - "--port=3306"
+            - "ej-migration:us-central1:cloudmysql"
           securityContext:
             runAsNonRoot: true
           resources:
-            limits:
-              cpu: 25m
-              ephemeral-storage: 1Gi
-              memory: 256Mi
             requests:
-              cpu: 25m
-              ephemeral-storage: 1Gi
-              memory: 256Mi
+              memory: "2Gi"
+              cpu: "1"
