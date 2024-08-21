@@ -12,5 +12,6 @@ service:
 
 serviceaccount:
   name: todo-app-ksa
+  gsa: todo-k8s-csql@ej-migration.iam.gserviceaccount.com 
 
 resources: {}
