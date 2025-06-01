@@ -2,11 +2,11 @@ package auth_views
 
 import (
 	"github.com/emarifer/gofiber-templ-htmx/views"
+
 	"github.com/gofiber/fiber/v2"
 )
 
 templ RegisterIndex(fromProtected bool) {
-	inputClass := "input input-bordered input-primary bg-slate-800"
 	<section class="card w-fit bg-base-200 shadow-xl mx-auto mb-8">
 		<div class="card-body pb-2">
 			<h1 class="card-title border-b border-b-slate-600 pb-[4px]">
@@ -21,29 +21,34 @@ templ RegisterIndex(fromProtected bool) {
 				<label class="flex flex-col justify-start gap-2">
 					Email:
 					<input
-						class={inputClass}
+						class="input input-bordered input-primary bg-slate-800"
 						type="email"
 						name="email"
 						required
 						autofocus
-						disabled={fromProtected}
+						disabled?={ fromProtected }
+						if fromProtected {
+							value="disabled "
+						}
 					/>
 				</label>
-
 				<label class="flex flex-col justify-start gap-2 relative">
 					Password:
 					<input
-						class={inputClass}
+						class="input input-bordered input-primary bg-slate-800"
 						type="password"
 						name="password"
 						required
 						minlength="6"
-						disabled={fromProtected}
+						disabled?={ fromProtected }
+						if fromProtected {
+							value="disabled "
+						}
 					/>
 					<button
 						title="View password"
 						type="button"
-						disabled={fromProtected}
+						disabled?={ fromProtected }
 						class="absolute top-12 right-3"
 						_="on click if [type of previous <input/>] == 'password' then remove [@type=password] from previous <input/> then hide #eye then remove .hidden from #eye-slash else show #eye then add .hidden to #eye-slash then tell previous <input/> toggle [@type=password] end"
 					>
@@ -57,25 +62,23 @@ templ RegisterIndex(fromProtected bool) {
 						</svg>
 					</button>
 				</label>
-
 				<label class="flex flex-col justify-start gap-2">
 					Username:
 					<input
-						class={inputClass}
+						class="input input-bordered input-primary bg-slate-800"
 						type="text"
 						name="username"
 						required
 						minlength="4"
 						maxlength="64"
-						disabled={fromProtected}
+						disabled?={ fromProtected }
+						if fromProtected {
+							value="disabled "
+						}
 					/>
 				</label>
-
 				<footer class="card-actions justify-end">
-					<button
-						class="badge badge-primary px-6 py-4 hover:scale-[1.1]"
-						disabled={fromProtected}
-					>
+					<button class="badge badge-primary px-6 py-4 hover:scale-[1.1]" disabled?={ fromProtected }>
 						Register User
 					</button>
 				</footer>
