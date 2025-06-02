@@ -1,6 +1,8 @@
 package views
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 templ HomeIndex(fromProtected bool) {
 	<section class="mx-auto w-fit flex flex-col gap-8 text-center">
@@ -8,27 +10,26 @@ templ HomeIndex(fromProtected bool) {
 		<p class="text-2xl font-thin">
 			Here you can keep track of all your tasks and have an overview of your responsibilities.
 		</p>
-		if !fromProtected {
-			<hr class="my-4 w-4/5 mx-auto opacity-25"/>
+
+		@if !fromProtected {
+			<hr class="my-4 w-4/5 mx-auto opacity-25" />
 			<p class="text-base font-thin">You have an account?</p>
 			<footer class="flex gap-4 justify-center">
-				<a
-					hx-swap="transition:true"
-					href="/login"
-					class="badge badge-primary px-6 py-4 hover:scale-[1.1] text-lg font-thin"
-				>
-					Log In
-				</a>
-				<a
-					hx-swap="transition:true"
-					href="/register"
-					class="badge badge-neutral px-6 py-4 hover:scale-[1.1] text-lg font-thin"
-				>
-					Sign Up
-				</a>
+				@authLink("/login", "Log In", "badge-primary")
+				@authLink("/register", "Sign Up", "badge-neutral")
 			</footer>
 		}
 	</section>
+}
+
+templ authLink(href, label, theme string) {
+	<a
+		hx-swap="transition:true"
+		href={href}
+		class={"badge " + theme + " px-6 py-4 hover:scale-[1.1] text-lg font-thin"}
+	>
+		{label}
+	</a>
 }
 
 templ Home(
