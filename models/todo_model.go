@@ -1,8 +1,8 @@
 package models
 
 import (
+	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -15,148 +15,86 @@ type Todo struct {
 	CreatedAt   time.Time `json:"created_at,omitempty"`
 }
 
-func (t *Todo) GetAllTodos() ([]Todo, error) {
-	query := fmt.Sprintf(`SELECT id, title, description, status FROM todos WHERE created_by = %d ORDER BY created_at DESC`, t.CreatedBy)
+// DB should be passed or set externally for cleaner architecture.
+var db *sql.DB
 
-	rows, err := db.Query(query)
+func SetDB(database *sql.DB) {
+	db = database
+}
+
+func (t *Todo) GetAllTodos() ([]Todo, error) {
+	query := `SELECT id, title, description, status FROM todos WHERE created_by = ? ORDER BY created_at DESC`
+	rows, err := db.Query(query, t.CreatedBy)
 	if err != nil {
-		return []Todo{}, err
+		return nil, err
 	}
-	// We close the resource
 	defer rows.Close()
 
-	todos := []Todo{}
+	var todos []Todo
 	for rows.Next() {
-		rows.Scan(&t.ID, &t.Title, &t.Description, &t.Status)
-
-		todos = append(todos, *t)
+		var todo Todo
+		if err := rows.Scan(&todo.ID, &todo.Title, &todo.Description, &todo.Status); err != nil {
+			return nil, err
+		}
+		todos = append(todos, todo)
 	}
-
 	return todos, nil
 }
 
-func (t *Todo) GetNoteById() (Todo, error) {
+func (t *Todo) GetNoteById() (*Todo, error) {
+	query := `SELECT id, title, description, status, created_at FROM todos WHERE created_by = ? AND id = ?`
+	row := db.QueryRow(query, t.CreatedBy, t.ID)
 
-	query := `SELECT id, title, description, status, created_at FROM todos
-		WHERE created_by = ? AND id=?`
-
-	stmt, err := db.Prepare(query)
+	var todo Todo
+	err := row.Scan(&todo.ID, &todo.Title, &todo.Description, &todo.Status, &todo.CreatedAt)
 	if err != nil {
-		return Todo{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
 	}
-
-	defer stmt.Close()
-
-	var recoveredTodo Todo
-	err = stmt.QueryRow(
-		t.CreatedBy, t.ID,
-	).Scan(
-		&recoveredTodo.ID,
-		&recoveredTodo.Title,
-		&recoveredTodo.Description,
-		&recoveredTodo.Status,
-		&recoveredTodo.CreatedAt,
-	)
-	if err != nil {
-		return Todo{}, err
-	}
-
-	return recoveredTodo, nil
+	return &todo, nil
 }
 
-func (t *Todo) CreateTodo() (Todo, error) {
-
-	query := `INSERT INTO todos (created_by, title, description)
-		VALUES(?, ?, ?);`
-
-	stmt, err := db.Prepare(query)
-	if err != nil {
-		return Todo{}, err
-	}
-
-	defer stmt.Close()
+func (t *Todo) CreateTodo() (*Todo, error) {
+	query := `INSERT INTO todos (created_by, title, description) VALUES (?, ?, ?) RETURNING id, created_by, title, description, status, created_at`
+	row := db.QueryRow(query, t.CreatedBy, t.Title, t.Description)
 
 	var newTodo Todo
-	err = stmt.QueryRow(
-		t.CreatedBy,
-		t.Title,
-		t.Description,
-	).Scan(
-		&newTodo.ID,
-		&newTodo.CreatedBy,
-		&newTodo.Title,
-		&newTodo.Description,
-		&newTodo.Status,
-		&newTodo.CreatedAt,
-	)
-	if err != nil {
-		return Todo{}, err
+	if err := row.Scan(&newTodo.ID, &newTodo.CreatedBy, &newTodo.Title, &newTodo.Description, &newTodo.Status, &newTodo.CreatedAt); err != nil {
+		return nil, err
 	}
-
-	/* if i, err := result.RowsAffected(); err != nil || i != 1 {
-		return errors.New("error: an affected row was expected")
-	} */
-
-	return newTodo, nil
+	return &newTodo, nil
 }
-func (t *Todo) UpdateTodo() (Todo, error) {
 
-	query := `UPDATE todos SET title = ?,  description = ?, status = ?
-		WHERE created_by = ? AND id=?`
-
-	stmt, err := db.Prepare(query)
-	if err != nil {
-		return Todo{}, err
-	}
-
-	defer stmt.Close()
+func (t *Todo) UpdateTodo() (*Todo, error) {
+	query := `UPDATE todos SET title = ?, description = ?, status = ? WHERE created_by = ? AND id = ? RETURNING id, title, description, status`
+	row := db.QueryRow(query, t.Title, t.Description, t.Status, t.CreatedBy, t.ID)
 
 	var updatedTodo Todo
-	err = stmt.QueryRow(
-		t.Title,
-		t.Description,
-		t.Status,
-		t.CreatedBy,
-		t.ID,
-	).Scan(
-		&updatedTodo.ID,
-		&updatedTodo.Title,
-		&updatedTodo.Description,
-		&updatedTodo.Status,
-	)
-	if err != nil {
-		return Todo{}, err
+	if err := row.Scan(&updatedTodo.ID, &updatedTodo.Title, &updatedTodo.Description, &updatedTodo.Status); err != nil {
+		return nil, err
 	}
-
-	return updatedTodo, nil
+	return &updatedTodo, nil
 }
 
 func (t *Todo) DeleteTodo() error {
-
-	query := `DELETE FROM todos
-		WHERE created_by = ? AND id=?`
-
-	stmt, err := db.Prepare(query)
+	query := `DELETE FROM todos WHERE created_by = ? AND id = ?`
+	result, err := db.Exec(query, t.CreatedBy, t.ID)
 	if err != nil {
 		return err
 	}
-
-	defer stmt.Close()
-
-	result, err := stmt.Exec(t.CreatedBy, t.ID)
-	if err != nil {
-		return err
+	affected, err := result.RowsAffected()
+	if err != nil || affected != 1 {
+		return errors.New("expected exactly one row to be affected")
 	}
-
-	if i, err := result.RowsAffected(); err != nil || i != 1 {
-		return errors.New("an affected row was expected")
-	}
-
 	return nil
 }
 
 func ConvertDateTime(tz string, dt time.Time) string {
-	loc, _ := time.LoadLocation(tz)
-
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return dt.Format(time.RFC822Z) // fallback
+	}
 	return dt.In(loc).Format(time.RFC822Z)
 }
