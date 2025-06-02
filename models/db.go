@@ -5,73 +5,71 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
+)
+
+var (
+	db   *sql.DB
+	once sync.Once
 )
 
 func init() {
 	MakeMigrations()
 }
 
-var db *sql.DB
+func getConnection() *sql.DB {
+	once.Do(func() {
+		dsn := fmt.Sprintf(
+			"%s:%s@tcp(%s:%s)/%s?parseTime=true",
+			os.Getenv("MYSQL_USERNAME"),
+			os.Getenv("MYSQL_PASSWORD"),
+			os.Getenv("MYSQL_HOST"),
+			os.Getenv("MYSQL_PORT"),
+			os.Getenv("MYSQL_DATABASE"),
+		)
 
-func getConnection() {
-	var err error
+		var err error
+		db, err = sql.Open("mysql", dsn)
+		if err != nil {
+			log.Fatalf("🔥 Failed to connect to the database: %v", err)
+		}
 
-	if db != nil {
-		return
-	}
+		if err = db.Ping(); err != nil {
+			log.Fatalf("🔥 Database ping failed: %v", err)
+		}
 
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		os.Getenv("MYSQL_USERNAME"),
-		os.Getenv("MYSQL_PASSWORD"),
-		os.Getenv("MYSQL_HOST"),
-		os.Getenv("MYSQL_PORT"),
-		os.Getenv("MYSQL_DATABASE"))
+		log.Println("🚀 Connected successfully to the database")
+	})
 
-	// dsn := "uptnnvsx8snn1krr:LoOofEbpnMuNre8xERnq@tcp(b1c6cznmpczvwnocjclv-mysql.services.clever-cloud.com:3306)/b1c6cznmpczvwnocjclv?parseTime=true"
-
-	// Init MySQL database
-	db, err = sql.Open("mysql", dsn)
-	if err != nil {
-		log.Fatalf("🔥 failed to connect to the database: %s", err.Error())
-	}
-
-	log.Println("🚀 Connected Successfully to the Database")
+	return db
 }
 
 func MakeMigrations() {
-	getConnection()
+	conn := getConnection()
 
-	stmt := `CREATE TABLE IF NOT EXISTS users (
-		id INT AUTO_INCREMENT PRIMARY KEY,
-		email VARCHAR(255) NOT NULL UNIQUE,
-		password VARCHAR(255) NOT NULL,
-		username VARCHAR(64) NOT NULL
-	);`
-
-	_, err := db.Exec(stmt)
-	if err != nil {
-		log.Fatal(err)
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS users (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			email VARCHAR(255) NOT NULL UNIQUE,
+			password VARCHAR(255) NOT NULL,
+			username VARCHAR(64) NOT NULL
+		);`,
+		`CREATE TABLE IF NOT EXISTS todos (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			created_by INT NOT NULL,
+			title VARCHAR(64) NOT NULL,
+			description VARCHAR(255),
+			status BOOLEAN DEFAULT FALSE,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (created_by) REFERENCES users(id)
+		);`,
 	}
 
-	stmt = `CREATE TABLE IF NOT EXISTS todos (
-		id INT AUTO_INCREMENT PRIMARY KEY,
-		created_by INT NOT NULL,
-		title VARCHAR(64) NOT NULL,
-		description VARCHAR(255) NULL,
-		status BOOLEAN DEFAULT FALSE,
-		created_at DATETIME default CURRENT_TIMESTAMP,
-		FOREIGN KEY (created_by) REFERENCES users(id)
-	);`
-
-	_, err = db.Exec(stmt)
-	if err != nil {
-		log.Fatal(err)
+	for _, stmt := range statements {
+		if _, err := conn.Exec(stmt); err != nil {
+			log.Fatalf("❌ Failed to execute migration: %v", err)
+		}
 	}
 }
-
-/*
-https://noties.io/blog/2019/08/19/sqlite-toggle-boolean/index.html
-*/
